@@ -1,0 +1,152 @@
+openapi: 3.0.3
+
+info:
+  title: API de Boletim Escolar
+  description: API REST de notas escolares usando PHP, PDO e MariaDB.
+  version: 1.0.0
+
+servers:
+  - url: http://localhost/boletim/api
+
+tags:
+  - name: Boletim
+
+paths:
+  /boletim.php:
+    get:
+      tags: [Boletim]
+      summary: Lista notas ou consulta um registro
+      parameters:
+        - name: id
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Registros encontrados
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: array
+                    items:
+                      $ref: '#/components/schemas/Registro'
+                  - $ref: '#/components/schemas/Registro'
+        '404':
+          $ref: '#/components/responses/Erro'
+
+    post:
+      tags: [Boletim]
+      summary: Cadastra uma nota
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotaEntrada'
+      responses:
+        '201':
+          description: Nota cadastrada
+        '409':
+          $ref: '#/components/responses/Erro'
+        '422':
+          $ref: '#/components/responses/Erro'
+
+    put:
+      tags: [Boletim]
+      summary: Atualiza uma nota
+      parameters:
+        - name: id
+          in: query
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotaEntrada'
+      responses:
+        '200':
+          description: Nota atualizada
+        '400':
+          $ref: '#/components/responses/Erro'
+        '404':
+          $ref: '#/components/responses/Erro'
+        '422':
+          $ref: '#/components/responses/Erro'
+
+    delete:
+      tags: [Boletim]
+      summary: Exclui uma nota
+      parameters:
+        - name: id
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Nota excluída
+        '404':
+          $ref: '#/components/responses/Erro'
+
+components:
+  schemas:
+    NotaEntrada:
+      type: object
+      required: [aluno, turma, disciplina, bimestre, nota]
+      properties:
+        aluno:
+          type: string
+          maxLength: 120
+          example: Ana Silva
+        turma:
+          type: string
+          maxLength: 30
+          example: 9º A
+        disciplina:
+          type: string
+          maxLength: 100
+          example: Matemática
+        bimestre:
+          type: integer
+          minimum: 1
+          maximum: 4
+          example: 1
+        nota:
+          type: number
+          minimum: 0
+          maximum: 10
+          example: 8.5
+
+    Registro:
+      allOf:
+        - $ref: '#/components/schemas/NotaEntrada'
+        - type: object
+          properties:
+            id:
+              type: integer
+            media:
+              type: number
+            bimestres:
+              type: integer
+            criada_em:
+              type: string
+              format: date-time
+
+    Erro:
+      type: object
+      properties:
+        erro:
+          type: string
+
+  responses:
+    Erro:
+      description: Erro na solicitação
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Erro'
